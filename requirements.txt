@@ -1,8 +1,19 @@
+# Core dependencies
 numpy
 pandas
-scikit-learn
-lightgbm
 pyyaml
 joblib
-fastapi           # optional if you want to serve predictions later
-uvicorn           # optional
+
+# Machine Learning
+scikit-learn
+lightgbm
+
+# Web Frameworks (optional, for serving APIs)
+fastapi
+uvicorn
+
+# Dashboard / Visualization
+streamlit
+
+# Optional utility (progress bars, logging, etc.)
+tqdm
