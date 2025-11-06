@@ -9,20 +9,21 @@ import time
 
 def generate_rows(n_rows=10000, start_date=None, seed=None):
     """
-    Generate revenue dataset with dynamic random values.
-    - start_date: if None, uses today - n_rows days
-    - seed: if None, uses timestamp for randomness
+    Generate synthetic revenue data with dynamic seed to ensure unique data each run.
+    Adds timestamp column to track generation time.
     """
+    # Use provided seed or fallback to current timestamp
     seed = seed or int(time.time()) % 2**32
     random.seed(seed)
     np.random.seed(seed)
 
     start = datetime.fromisoformat(start_date) if start_date else datetime.today() - timedelta(days=n_rows)
-
     rows = []
-    product_ids = [f"P{str(i).zfill(3)}" for i in range(1, 51)]
+
+    product_ids = [f"P{str(i).zfill(3)}" for i in range(1, 51)]  # 50 products
     regions = ["North", "South", "East", "West", "Central"]
     channels = ["Online", "Retail", "Distributor"]
+
     base_price = {p: float(np.random.uniform(20, 300)) for p in product_ids}
     base_demand = {p: float(np.random.uniform(50, 2000)) for p in product_ids}
 
@@ -32,9 +33,11 @@ def generate_rows(n_rows=10000, start_date=None, seed=None):
         region = random.choice(regions)
         channel = random.choice(channels)
 
+        # Seasonality factor by month
         month = date.month
-        seasonality = 1 + 0.2 * np.sin(2 * np.pi * month / 12)
+        seasonality = 1 + 0.2 * np.sin(2 * np.pi * (month / 12))
 
+        # Price variation, marketing effect, multipliers
         price = round(base_price[product] * np.random.uniform(0.9, 1.1), 2)
         marketing = round(np.random.exponential(scale=500.0), 2)
         channel_mult = {"Online": 1.1, "Retail": 0.9, "Distributor": 0.8}[channel]
@@ -48,6 +51,7 @@ def generate_rows(n_rows=10000, start_date=None, seed=None):
         prev_revenue = round(revenue * np.random.uniform(0.85, 1.15), 2)
 
         rows.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Track when row generated
             "date": date.strftime("%Y-%m-%d"),
             "product_id": product,
             "region": region,
@@ -64,15 +68,16 @@ def generate_rows(n_rows=10000, start_date=None, seed=None):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rows", type=int, default=10000)
-    parser.add_argument("--out", type=str, default="data/revenue_data.csv")
-    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--rows", type=int, default=10000, help="Number of rows to generate")
+    parser.add_argument("--out", type=str, default="data/revenue_data.csv", help="Output CSV path")
+    parser.add_argument("--seed", type=int, default=None, help="Optional random seed")
+    parser.add_argument("--start_date", type=str, default=None, help="Optional start date YYYY-MM-DD")
     args = parser.parse_args()
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    df = generate_rows(n_rows=args.rows, seed=args.seed)
+    df = generate_rows(n_rows=args.rows, seed=args.seed, start_date=args.start_date)
     df.to_csv(args.out, index=False)
-    print(f"Generated {len(df)} rows to {args.out}")
+    print(f"Generated {len(df)} rows to {args.out} (seed={args.seed or 'dynamic'})")
 
 if __name__ == "__main__":
     main()
