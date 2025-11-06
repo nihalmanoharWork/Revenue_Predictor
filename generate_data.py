@@ -64,6 +64,10 @@ def generate_rows(n_rows=10000, start_date=None, seed=None):
         })
 
     df = pd.DataFrame(rows)
+    
+    # Ensure rows are shuffled so repeated runs look different in order
+    df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+    
     return df
 
 def main():
