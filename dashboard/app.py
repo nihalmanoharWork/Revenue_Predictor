@@ -13,11 +13,10 @@ def get_latest_csv(folder="data", pattern="predictions.csv"):
     files = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(pattern)]
     if not files:
         return None
-    # Return the most recently modified file
     return max(files, key=os.path.getmtime)
 
 # ----------------------------
-# Load Data
+# Load Latest Predictions Data
 # ----------------------------
 latest_csv = get_latest_csv()
 if not latest_csv:
@@ -30,6 +29,14 @@ def load_data(path):
 
 df = load_data(latest_csv)
 st.success(f"✅ Data loaded from {latest_csv}")
+
+# ----------------------------
+# Optional: Load latest revenue_data.csv
+# ----------------------------
+latest_revenue_csv = get_latest_csv(pattern="revenue_data.csv")
+df_revenue = None
+if latest_revenue_csv:
+    df_revenue = pd.read_csv(latest_revenue_csv)
 
 # ----------------------------
 # KPIs
@@ -48,7 +55,7 @@ col4.metric("Min Predicted Revenue", f"${min_revenue:,.2f}")
 st.divider()
 
 # ----------------------------
-# Chart
+# Chart: Predicted Revenue Over Time
 # ----------------------------
 st.subheader("Revenue Predictions Over Time")
 if "date" in df.columns:
@@ -56,9 +63,25 @@ if "date" in df.columns:
 else:
     st.line_chart(df["predicted_revenue"])
 
+# ----------------------------
+# Optional: Chart from revenue_data.csv
+# ----------------------------
+if df_revenue is not None:
+    st.subheader("Original Revenue Data Over Time")
+    if "date" in df_revenue.columns:
+        st.line_chart(df_revenue.set_index("date")["revenue"])
+    else:
+        st.line_chart(df_revenue["revenue"])
+    st.caption(f"Data source: {latest_revenue_csv}")
+
+# ----------------------------
+# Last Updated
+# ----------------------------
 st.caption(f"Last updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 # ----------------------------
 # Optional: Auto-refresh every 10 mins
 # ----------------------------
-# st.experimental_rerun() can be used inside a timer loop if needed
+# Uncomment the next two lines to enable auto-refresh
+# import streamlit as st
+# st.experimental_rerun()  # Note: Use with caution; will rerun every time page reloads
