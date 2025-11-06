@@ -5,6 +5,7 @@ import joblib
 import yaml
 import os
 from datetime import datetime
+import numpy as np
 
 def load_pipeline(path):
     """Load trained ML pipeline."""
@@ -36,6 +37,8 @@ def main():
             raise ValueError("In single mode, you must provide --data values.")
         df = pd.DataFrame([args.data], columns=features)
         pred = pipeline.predict(df)[0]
+        # Simulate daily fluctuation (±2%)
+        pred *= np.random.uniform(0.98, 1.02)
         print(f"Predicted revenue: {pred:.2f}")
         return
 
@@ -49,17 +52,18 @@ def main():
         if c not in df.columns:
             raise ValueError(f"Missing required column: {c}")
 
-    # Predict
     preds = pipeline.predict(df[features])
-    df["predicted_revenue"] = preds
+    # Apply small daily fluctuation to predictions
+    fluctuation = np.random.uniform(0.98, 1.02, size=len(preds))
+    df["predicted_revenue"] = preds * fluctuation
 
-    # Add timestamp to ensure Git detects changes
-    df["prediction_timestamp"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    # Add timestamp for each run
+    df["prediction_timestamp"] = datetime.utcnow().isoformat()
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     df.to_csv(args.output, index=False)
 
-    print(f"Predictions saved to {args.output} with timestamp column")
+    print(f"Predictions saved to {args.output}")
 
 if __name__ == "__main__":
     main()
