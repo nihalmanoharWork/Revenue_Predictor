@@ -31,6 +31,9 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git reset --hard origin/main
           git add data/predictions.csv
           git commit -m "Automated daily run - $(date)" || echo "No changes to commit"
           git push
+
