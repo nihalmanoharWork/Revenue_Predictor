@@ -11,10 +11,7 @@ venv/
 env/
 
 # Data and models
-data/*.csv
-!data/predictions.csv      # keep only predictions
-models/*.joblib
-!models/revenue_model.joblib  # keep only the latest model
+
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
