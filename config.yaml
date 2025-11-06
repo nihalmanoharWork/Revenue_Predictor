@@ -1,0 +1,33 @@
+data:
+  path: data/revenue_data.csv
+  target: revenue
+  test_size: 0.2
+  random_state: 42
+
+features:
+  numeric: 
+    - price
+    - marketing_spend
+    - units_sold
+    - prev_month_revenue
+  categorical:
+    - product_id
+    - region
+    - channel
+
+model:
+  type: dart
+  params:
+    learning_rate: 0.05
+    num_leaves: 31
+    max_depth: -1
+    n_estimators: 200
+
+pipeline:
+  steps:
+    - load_data
+    - preprocess
+    - train_model
+    - evaluate
+  save_model: true
+  output_model_path: models/revenue_dart_model.pkl

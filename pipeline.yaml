@@ -1,0 +1,13 @@
+# pipeline.yaml
+steps:
+  - name: generate
+    script: generate_data.py
+    args: ["--rows", "15000", "--out", "data/revenue_data.csv"]
+
+  - name: train
+    script: train.py
+    args: ["--config", "config.yaml", "--out", "models/revenue_model.joblib"]
+
+  - name: predict
+    script: predict.py
+    args: ["--config", "config.yaml", "--input", "data/revenue_data.csv", "--model", "models/revenue_model.joblib", "--output", "data/predictions.csv"]

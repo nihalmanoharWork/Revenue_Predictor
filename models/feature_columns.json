@@ -1,0 +1,14 @@
+{
+  "numeric": [
+    "price",
+    "marketing_spend",
+    "units_sold",
+    "prev_month_revenue"
+  ],
+  "categorical": [
+    "product_id",
+    "region",
+    "channel"
+  ],
+  "date": []
+}

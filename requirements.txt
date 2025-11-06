@@ -1,0 +1,8 @@
+numpy
+pandas
+scikit-learn
+lightgbm
+pyyaml
+joblib
+fastapi           # optional if you want to serve predictions later
+uvicorn           # optional
