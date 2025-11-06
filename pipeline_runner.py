@@ -22,25 +22,29 @@ def run_step(name, script, args):
         print(result.stderr)
         sys.exit(result.returncode)
 
-def commit_predictions(file_path="data/predictions.csv"):
-    """Add, commit, and push the latest predictions to GitHub."""
-    if not os.path.exists(file_path):
-        print(f"⚠️ Predictions file '{file_path}' not found. Skipping commit.")
+
+def commit_files(file_paths):
+    """
+    Add, commit, and push updated files to GitHub.
+    Uses force-add (-f) to override .gitignore.
+    """
+    existing_files = [f for f in file_paths if os.path.exists(f)]
+    if not existing_files:
+        print("⚠️ No files found to commit.")
         return
 
-    # Force add to bypass .gitignore
-    subprocess.run(["git", "add", "-f", file_path], check=True)
-    # Commit
-    commit_result = subprocess.run(
-        ["git", "commit", "-m", f"Automated daily run - {time.strftime('%Y-%m-%d %H:%M:%S')}"],
-        text=True
-    )
-    # Skip push if no changes to commit
+    # Force-add files to bypass .gitignore
+    subprocess.run(["git", "add", "-f"] + existing_files, check=True)
+
+    commit_msg = f"Automated daily run - {time.strftime('%Y-%m-%d %H:%M:%S')}"
+    commit_result = subprocess.run(["git", "commit", "-m", commit_msg], text=True)
+
     if commit_result.returncode == 0:
         subprocess.run(["git", "push"], check=True)
-        print("✅ Predictions committed and pushed successfully!")
+        print("✅ Updated files committed and pushed successfully!")
     else:
-        print("ℹ️ No changes to commit.")
+        print("ℹ️ No changes to commit. Files may not have changed.")
+
 
 def main():
     pipeline_file = "pipeline.yaml"
@@ -56,13 +60,16 @@ def main():
         print("No steps found in pipeline.yaml.")
         sys.exit(1)
 
+    # Run all pipeline steps
     for step in steps:
         run_step(step["name"], step["script"], step.get("args", []))
 
-    # Commit latest predictions
-    commit_predictions()
+    # Commit updated CSVs to GitHub
+    csv_files = ["data/revenue_data.csv", "data/predictions.csv"]
+    commit_files(csv_files)
 
     print("\n🎉 All steps completed successfully!")
+
 
 if __name__ == "__main__":
     main()
