@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 import yaml
 import os
-
+from datetime import datetime
 
 def load_pipeline(path):
     """Load trained ML pipeline."""
@@ -12,7 +12,6 @@ def load_pipeline(path):
         raise FileNotFoundError(f"Model not found at {path}")
     print(f"Loading model from {path} ...")
     return joblib.load(path)
-
 
 def main():
     parser = argparse.ArgumentParser(description="Run revenue prediction")
@@ -50,14 +49,17 @@ def main():
         if c not in df.columns:
             raise ValueError(f"Missing required column: {c}")
 
+    # Predict
     preds = pipeline.predict(df[features])
     df["predicted_revenue"] = preds
+
+    # Add timestamp to ensure Git detects changes
+    df["prediction_timestamp"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     df.to_csv(args.output, index=False)
 
-    print(f"Predictions saved to {args.output}")
-
+    print(f"Predictions saved to {args.output} with timestamp column")
 
 if __name__ == "__main__":
     main()
