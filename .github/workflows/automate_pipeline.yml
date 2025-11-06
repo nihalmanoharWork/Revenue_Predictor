@@ -3,7 +3,7 @@ name: Daily Revenue Prediction
 on:
   schedule:
     - cron: '0 6 * * *'   # Runs every day at 6 AM UTC
-  workflow_dispatch:        # Allows manual trigger from GitHub
+  workflow_dispatch:        # Allows manual trigger
 
 jobs:
   run_pipeline:
@@ -12,11 +12,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch full history so push works
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'  # Match your local version
 
       - name: Install dependencies
         run: |
@@ -24,16 +26,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run the full pipeline
-        run: |
-          python pipeline_runner.py
+        run: python pipeline_runner.py
 
       - name: Commit and push predictions
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git fetch origin main
-          git reset --hard origin/main
-          git add data/predictions.csv
-          git commit -m "Automated daily run - $(date)" || echo "No changes to commit"
-          git push
 
+          # Force add predictions to bypass .gitignore
+          git add -f data/predictions.csv
+          git add -f data/revenue_data.csv
+
+          # Commit if there are changes
+          git diff --cached --quiet || git commit -m "Automated daily run - $(date)"
+
+          # Push changes
+          git push origin main
