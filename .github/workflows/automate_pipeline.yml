@@ -3,42 +3,53 @@ name: Daily Revenue Prediction
 on:
   schedule:
     - cron: '0 6 * * *'   # Runs every day at 6 AM UTC
-  workflow_dispatch:        # Allows manual trigger
+  workflow_dispatch:        # Allows manual trigger from GitHub
 
 jobs:
   run_pipeline:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch full history so push works
+          persist-credentials: false   # Allows manual push later
 
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # Match your local version
+          python-version: '3.11'
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Step 4: Run the full pipeline
       - name: Run the full pipeline
-        run: python pipeline_runner.py
-
-      - name: Commit and push predictions
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          python pipeline_runner.py
 
-          # Force add predictions to bypass .gitignore
-          git add -f data/predictions.csv
-          git add -f data/revenue_data.csv
+      # Step 5: Commit & push updated files
+      - name: Commit and push updates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Commit if there are changes
-          git diff --cached --quiet || git commit -m "Automated daily run - $(date)"
+          # Fetch latest and reset to avoid conflicts
+          git fetch origin main
+          git reset --hard origin/main
 
-          # Push changes
+          # Force-add CSVs and model (override .gitignore)
+          git add -f data/revenue_data.csv data/predictions.csv models/revenue_model.joblib
+
+          # Commit only if changes exist
+          git diff --cached --quiet || git commit -m "Automated daily run - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+          # Push updates
           git push origin main
