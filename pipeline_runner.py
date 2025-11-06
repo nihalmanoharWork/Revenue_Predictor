@@ -22,7 +22,6 @@ def run_step(name, script, args):
         print(result.stderr)
         sys.exit(result.returncode)
 
-
 def commit_files(file_paths):
     """
     Add, commit, and push updated files to GitHub.
@@ -45,7 +44,6 @@ def commit_files(file_paths):
     else:
         print("ℹ️ No changes to commit. Files may not have changed.")
 
-
 def main():
     pipeline_file = "pipeline.yaml"
     if not os.path.exists(pipeline_file):
@@ -64,12 +62,15 @@ def main():
     for step in steps:
         run_step(step["name"], step["script"], step.get("args", []))
 
-    # Commit updated CSVs to GitHub
-    csv_files = ["data/revenue_data.csv", "data/predictions.csv"]
-    commit_files(csv_files)
+    # Commit updated CSVs and retrained model to GitHub
+    files_to_commit = [
+        "data/revenue_data.csv",
+        "data/predictions.csv",
+        "models/revenue_model.joblib"  # Make sure this matches your output model path
+    ]
+    commit_files(files_to_commit)
 
     print("\n🎉 All steps completed successfully!")
-
 
 if __name__ == "__main__":
     main()
